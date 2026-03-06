@@ -1,0 +1,36 @@
+.receipt-wrapper {
+  margin-top: 20px;
+}
+
+.receipt {
+  width: 280px;
+  padding: 10px;
+  border: 1px dashed black;
+  font-family: monospace;
+}
+
+.receipt-item {
+  display: flex;
+  justify-content: space-between;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .receipt,
+  .receipt * {
+    visibility: visible;
+  }
+
+  .receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+  }
+
+  button {
+    display: none;
+  }
+}
