@@ -37,7 +37,9 @@ namespace HoliBillingApi.Controllers
                 return Unauthorized("Invalid credentials");
             }
 
-            var jwtKey = _configuration["Jwt:Key"] ?? "THIS_IS_A_SUPER_SECRET_KEY_FOR_HOLI_BILLING_2026";
+            var jwtKey = string.IsNullOrWhiteSpace(_configuration["Jwt:Key"])
+                ? "THIS_IS_A_SUPER_SECRET_KEY_FOR_HOLI_BILLING_2026"
+                : _configuration["Jwt:Key"]!;
             var claims = new[] { new Claim(ClaimTypes.Name, admin.Username) };
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

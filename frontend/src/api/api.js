@@ -1,6 +1,9 @@
 import axios from "axios";
 
-const baseURL = process.env.REACT_APP_API_URL || "http://localhost:5026/api";
+const isLocalhost = typeof window !== "undefined"
+  && ["localhost", "127.0.0.1"].includes(window.location.hostname);
+const fallbackBaseURL = isLocalhost ? "http://localhost:5026/api" : "/api";
+const baseURL = process.env.REACT_APP_API_URL || fallbackBaseURL;
 
 const api = axios.create({
   baseURL,

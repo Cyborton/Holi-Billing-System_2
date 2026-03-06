@@ -24,8 +24,14 @@ const Login = ({ onLoginSuccess }) => {
       setError("");
       const response = await api.post("/auth/login", { username, password });
       onLoginSuccess(response.data.token);
-    } catch {
-      setError("Invalid credentials.");
+    } catch (error) {
+      if (!error?.response) {
+        setError("Cannot reach server. Check API URL/CORS deployment settings.");
+      } else if (error.response.status === 401) {
+        setError("Invalid credentials.");
+      } else {
+        setError("Login failed. Please try again.");
+      }
     } finally {
       setLoading(false);
     }

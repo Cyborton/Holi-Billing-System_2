@@ -8,40 +8,41 @@ var builder = WebApplication.CreateBuilder(args);
 
 // allow reading environment variables (needed for Render deployment)
 builder.Configuration.AddEnvironmentVariables();
+static string FirstNonEmpty(params string?[] values) =>
+    values.FirstOrDefault(v => !string.IsNullOrWhiteSpace(v)) ?? string.Empty;
 
 builder.Services.AddControllers();
 
 // choose database provider
-var databaseProvider = builder.Configuration["Database:Provider"];
-
-if (string.IsNullOrWhiteSpace(databaseProvider))
-{
-    databaseProvider = builder.Environment.IsDevelopment() ? "Sqlite" : "Postgres";
-}
+var databaseProvider = FirstNonEmpty(
+    builder.Configuration["Database:Provider"],
+    builder.Environment.IsDevelopment() ? "Sqlite" : "Postgres");
 
 // configure database
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     if (databaseProvider.Equals("Sqlite", StringComparison.OrdinalIgnoreCase))
     {
-        var sqliteConnection =
-            builder.Configuration.GetConnectionString("SqliteConnection")
-            ?? "Data Source=holi-dev.db";
+        var sqliteConnection = FirstNonEmpty(
+            builder.Configuration.GetConnectionString("SqliteConnection"),
+            "Data Source=holi-dev.db");
 
         options.UseSqlite(sqliteConnection);
         return;
     }
 
-    var postgresConnection =
-        builder.Configuration.GetConnectionString("DefaultConnection")
-        ?? builder.Configuration["DATABASE_URL"]
-        ?? "Host=localhost;Port=5432;Database=HoliBillingDb;Username=postgres;Password=postgres";
+    var postgresConnection = FirstNonEmpty(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        builder.Configuration["DATABASE_URL"],
+        "Host=localhost;Port=5432;Database=HoliBillingDb;Username=postgres;Password=postgres");
 
     options.UseNpgsql(postgresConnection);
 });
 
 // JWT authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "THIS_IS_A_SUPER_SECRET_KEY_FOR_HOLI_BILLING_2026";
+var jwtKey = FirstNonEmpty(
+    builder.Configuration["Jwt:Key"],
+    "THIS_IS_A_SUPER_SECRET_KEY_FOR_HOLI_BILLING_2026");
 var keyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 builder.Services
@@ -72,7 +73,9 @@ builder.Services.AddCors(options =>
 {
     var allowedOrigins = builder.Configuration
         .GetSection("Cors:AllowedOrigins")
-        .Get<string[]>()
+        .Get<string[]>()?
+        .Where(origin => !string.IsNullOrWhiteSpace(origin))
+        .ToArray()
         ?? new[]
         {
             "http://localhost:3000",

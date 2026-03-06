@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: holi-billing-api
+    runtime: docker
+    rootDir: backend/HoliBillingApi
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Database__Provider
+        value: Postgres
+      - key: ConnectionStrings__DefaultConnection
+        sync: false
+      - key: Jwt__Key
+        sync: false
+      - key: DefaultAdmin__Username
+        value: admin
+      - key: DefaultAdmin__Password
+        sync: false
+      - key: Cors__AllowedOrigins__0
+        sync: false
+

@@ -7,15 +7,27 @@ namespace HoliBillingApi.Data
     {
         public static async Task SeedAsync(AppDbContext context, IConfiguration configuration)
         {
-            var adminUsername = configuration["DefaultAdmin:Username"] ?? "admin";
-            var adminPassword = configuration["DefaultAdmin:Password"] ?? "admin123";
+            var configuredAdminUsername = configuration["DefaultAdmin:Username"];
+            var configuredAdminPassword = configuration["DefaultAdmin:Password"];
 
-            context.Admins.RemoveRange(context.Admins);
-            context.Admins.Add(new Admin
+            var adminUsername = string.IsNullOrWhiteSpace(configuredAdminUsername) ? "admin" : configuredAdminUsername.Trim();
+            var adminPassword = string.IsNullOrWhiteSpace(configuredAdminPassword) ? "admin123" : configuredAdminPassword;
+
+            var hasExplicitPassword = !string.IsNullOrWhiteSpace(configuredAdminPassword);
+            var existingAdmin = await context.Admins.FirstOrDefaultAsync(a => a.Username == adminUsername);
+
+            if (existingAdmin == null && !await context.Admins.AnyAsync())
             {
-                Username = adminUsername,
-                Password = adminPassword
-            });
+                context.Admins.Add(new Admin
+                {
+                    Username = adminUsername,
+                    Password = adminPassword
+                });
+            }
+            else if (existingAdmin != null && hasExplicitPassword && existingAdmin.Password != adminPassword)
+            {
+                existingAdmin.Password = adminPassword;
+            }
 
             if (!await context.Items.AnyAsync())
             {
